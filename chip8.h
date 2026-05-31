@@ -27,9 +27,11 @@ class chip8 {
   uint8_t delayTimer;
   uint8_t soundTimer;
 
-
-
   std::array<std::array<bool, WIDTH>, HEIGHT> display;
+
+  uint16_t fetch() {};
+
+  void decode(uint16_t opcode) {};
 
   void instr00E0();  // Clear screen
 

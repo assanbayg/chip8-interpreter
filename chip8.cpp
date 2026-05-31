@@ -51,4 +51,62 @@ chip8::chip8()
   memcpy(ram + 0x050, font, sizeof(font));
 }
 
+uint16_t chip8::fetch() {
+  // Combine two byte-instructions into one 16-bit instruction
+  uint16_t opcode = (ram[PC] << 8) | ram[PC + 1];
+  PC += 2;
+
+  return opcode;
+}
+
+void chip8::decode(uint16_t opcode) {
+  // D, X, Y, N -- 1..4th nibbles respectively
+  uint8_t D = (opcode >> 12) & 0xF;
+  uint8_t X = (opcode >> 8) & 0xF;
+  uint8_t Y = (opcode >> 4) & 0xF;
+
+  // Last 1..3 nibbles respectively
+  uint8_t N = (opcode) & 0xF;
+  uint8_t NN = (opcode) & 0xFF;
+  uint16_t NNN = (opcode) & 0xFFF;
+
+  // I know this is ugly...
+  switch (D) {
+    case 0x0:
+      break;
+    case 0x1:
+      break;
+    case 0x2:
+      break;
+    case 0x3:
+      break;
+    case 0x4:
+      break;
+    case 0x5:
+      break;
+    case 0x6:
+      break;
+    case 0x7:
+      break;
+    case 0x8:
+      break;
+    case 0x9:
+      break;
+    case 0xA:
+      break;
+    case 0xB:
+      break;
+    case 0xC:
+      break;
+    case 0xD:
+      break;
+    case 0xE:
+      break;
+    case 0xF:
+      break;
+    default:
+      break;
+  }
+}
+
 chip8::~chip8() {}
