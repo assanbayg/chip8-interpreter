@@ -41,7 +41,7 @@ void chip8::DXYN(uint8_t x_coord, uint8_t y_coord, uint8_t N) {
   V[0xF] = 0;
 
   for (uint8_t yline = 0; yline < N; ++yline) {
-    if (y_coord + yline >= 32) break; // Clip at the bottom
+    if (y_coord + yline >= 32) break;  // Clip at the bottom
 
     uint8_t sprite_byte = ram[I + yline];
 
@@ -61,7 +61,7 @@ void chip8::DXYN(uint8_t x_coord, uint8_t y_coord, uint8_t N) {
   }
 }
 
-chip8::chip8()
+chip8::chip8() noexcept
     : PC(0x200),
       ram{},
       V{},
@@ -97,8 +97,10 @@ void chip8::decode(uint16_t opcode) {
   // I know this is ugly...
   switch (D) {
     case 0x0:
+      if (opcode == 0x00E0) instr00E0();
       break;
     case 0x1:
+      instr1NNN(NNN);
       break;
     case 0x2:
       break;
@@ -109,20 +111,24 @@ void chip8::decode(uint16_t opcode) {
     case 0x5:
       break;
     case 0x6:
+      instr6XNN(X, NN);
       break;
     case 0x7:
+      instr7XNN(X, NN);
       break;
     case 0x8:
       break;
     case 0x9:
       break;
     case 0xA:
+      instrANNN(NNN);
       break;
     case 0xB:
       break;
     case 0xC:
       break;
     case 0xD:
+      DXYN(V[X], V[Y], N);
       break;
     case 0xE:
       break;

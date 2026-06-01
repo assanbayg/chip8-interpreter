@@ -13,8 +13,6 @@ class chip8 {
   static constexpr unsigned int HEIGHT = 32;
   static constexpr unsigned int FREQUENCY = 60;
 
-  uint8_t ram[MEMORY_SIZE];
-
   uint8_t V[16];  // General purpose registers V0-VF
 
   uint16_t I;  // Index register
@@ -26,12 +24,6 @@ class chip8 {
 
   uint8_t delayTimer;
   uint8_t soundTimer;
-
-  std::array<std::array<bool, WIDTH>, HEIGHT> display;
-
-  uint16_t fetch() {};
-
-  void decode(uint16_t opcode) {};
 
   void instr00E0();  // Clear screen
 
@@ -53,6 +45,12 @@ class chip8 {
 
  public:
   chip8() noexcept;
+
+  uint8_t ram[MEMORY_SIZE];
+  std::array<std::array<bool, WIDTH>, HEIGHT> display;
+
+  uint16_t fetch();
+  void decode(uint16_t opcode);
 
   ~chip8();
 };
