@@ -35,7 +35,7 @@ class chip8 {
 
   void instr00E0();  // Clear screen
 
-  void instr1NNN();  // Jump
+  void instr1NNN(uint16_t NNN);  // Jump
 
   // Pushes the current PC to the stack
   // and sets PC to NNN
@@ -43,13 +43,13 @@ class chip8 {
 
   void instr00EE();  // Popping the stack after 2NNN
 
-  void instr6XNN();  // Set register VX
+  void instr6XNN(uint8_t X, uint8_t NN);  // Set register VX
 
-  void instr7XNN();  // Add value to register VX
+  void instr7XNN(uint8_t X, uint8_t NN);  // Add value to register VX
 
-  void instrANNN();  // Set index register I
+  void instrANNN(uint16_t NNN);  // Set index register I
 
-  void DXYN();  // Display/Draw
+  void DXYN(uint8_t x_coord, uint8_t y_coord, uint8_t N);  // Display/Draw
 
  public:
   chip8() noexcept;

@@ -21,21 +21,45 @@ static constexpr uint8_t font[80] = {
     0xF0, 0x80, 0xF0, 0x80, 0x80   // F
 };
 
-void chip8::instr00E0() {}
+void chip8::instr00E0() { std::memset(&display, 0, sizeof(display)); }
 
-void chip8::instr1NNN() {}
+void chip8::instr1NNN(uint16_t NNN) { PC = NNN; }
 
 void chip8::instr2NNN() {}
 
 void chip8::instr00EE() {}
 
-void chip8::instr6XNN() {}
+void chip8::instr6XNN(uint8_t X, uint8_t NN) { V[X] = NN; }
 
-void chip8::instr7XNN() {}
+void chip8::instr7XNN(uint8_t X, uint8_t NN) { V[X] += NN; }
 
-void chip8::instrANNN() {}
+void chip8::instrANNN(uint16_t NNN) { I = NNN; }
 
-void chip8::DXYN() {}
+void chip8::DXYN(uint8_t x_coord, uint8_t y_coord, uint8_t N) {
+  x_coord %= 64;
+  y_coord %= 32;
+  V[0xF] = 0;
+
+  for (uint8_t yline = 0; yline < N; ++yline) {
+    if (y_coord + yline >= 32) break; // Clip at the bottom
+
+    uint8_t sprite_byte = ram[I + yline];
+
+    for (uint8_t xline = 0; xline < 8; ++xline) {
+      if (x_coord + xline >= 64) break;  // Clip at the right edge
+
+      uint8_t sprite_pixel = (sprite_byte >> (7 - xline)) & 0x1;
+
+      if (sprite_pixel) {
+        if (display[y_coord + yline][x_coord + xline] == 1) {
+          V[0xF] = 1;  // Collision
+        }
+        // Flipping the value
+        display[y_coord + yline][x_coord + xline] ^= 1;
+      }
+    }
+  }
+}
 
 chip8::chip8()
     : PC(0x200),
