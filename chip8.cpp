@@ -22,113 +22,6 @@ static constexpr uint8_t font[80] = {
     0xF0, 0x80, 0xF0, 0x80, 0x80   // F
 };
 
-void chip8::instr00E0() { std::memset(&display, 0, sizeof(display)); }
-
-void chip8::instr00EE() { PC = stack[--sp]; }
-
-void chip8::instr1NNN(uint16_t NNN) { PC = NNN; }
-
-void chip8::instr2NNN(uint16_t NNN) {
-  if (sp >= 16) {
-    return;
-  }
-
-  stack[sp++] = PC;
-  PC = NNN;
-}
-
-void chip8::instr3XNN(uint8_t X, uint8_t NN) {
-  if (V[X] == NN) {
-    PC += 2;
-  }
-}
-
-void chip8::instr4XNN(uint8_t X, uint8_t NN) {
-  if (V[X] != NN) {
-    PC += 2;
-  }
-}
-
-void chip8::instr5XY0(uint8_t X, uint8_t Y) {
-  if (V[X] == V[Y]) {
-    PC += 2;
-  }
-}
-
-void chip8::instr6XNN(uint8_t X, uint8_t NN) { V[X] = NN; }
-
-void chip8::instr7XNN(uint8_t X, uint8_t NN) { V[X] += NN; }
-
-void chip8::instr8XYN(uint8_t X, uint8_t Y, uint8_t N) {
-  switch (N) {
-    case 0x0:
-      V[X] = V[Y];
-      break;
-    case 0x1:
-      V[X] = V[X] | V[Y];
-      break;
-    case 0x2:
-      V[X] = V[X] & V[Y];
-      break;
-    case 0x3:
-      V[X] = V[X] ^ V[Y];
-      break;
-    case 0x4:
-      V[0xF] = (V[X] + V[Y]) > 255;
-      V[X] += V[Y];
-      break;
-    case 0x5:
-      V[0xF] = V[X] >= V[Y];
-      V[X] -= V[Y];
-      break;
-    case 0x6:
-      if (USE_COSMAC_VIP_SHIFT) {
-        V[X] = V[Y];
-      }
-      V[0xF] = V[X] & 0x1;
-      V[X] >>= 1;
-      break;
-    case 0x7:
-      V[0xF] = V[Y] >= V[X];
-      V[X] = V[Y] - V[X];
-      break;
-    case 0xE:
-      if (USE_COSMAC_VIP_SHIFT) {
-        V[X] = V[Y];
-      }
-      V[0xF] = (V[X] >> 7) & 0x1;
-      V[X] <<= 1;
-      break;
-    default:
-      break;
-  }
-}
-
-void chip8::instr9XY0(uint8_t X, uint8_t Y) {
-  if (V[X] != V[Y]) {
-    PC += 2;
-  }
-}
-
-void chip8::instrANNN(uint16_t NNN) { I = NNN; }
-
-void chip8::instrBNNN(uint16_t NNN) {
-  if (USE_COSMAC_VIP_SHIFT) {
-    PC = NNN + V[0x0];
-  } else {
-    uint8_t X = (NNN >> 8) & 0x0F;
-    PC = NNN + V[X];
-  }
-}
-
-void chip8::instrCXNN(uint8_t X, uint8_t NN) {
-  static std::random_device rd;
-  static std::mt19937 gen(rd());
-  static std::uniform_int_distribution<uint16_t> distr(0, 255);
-  uint8_t random_byte = static_cast<uint8_t>(distr(gen));
-  V[X] = random_byte & NN;
-}
-
 void chip8::instrDXYN(uint8_t x_coord, uint8_t y_coord, uint8_t N) {
   x_coord %= 64;
   y_coord %= 32;
@@ -193,46 +86,109 @@ void chip8::decode(uint16_t opcode) {
   switch (D) {
     case 0x0:
       if (opcode == 0x00E0)
-        instr00E0();
-      else {
-        instr00EE();
+        std::memset(&display, 0, sizeof(display));
+      else if (opcode == 0x00EE) {
+        PC = stack[--sp];
       }
       break;
-    case 0x1:
-      instr1NNN(NNN);
+    case 0x1:  // 1NNN
+      PC = NNN;
       break;
-    case 0x2:
-      instr2NNN(NNN);
+    case 0x2:  // 2NNN
+      if (sp >= 16) {
+        return;
+      }
+
+      stack[sp++] = PC;
+      PC = NNN;
       break;
-    case 0x3:
-      instr3XNN(X, NN);
+    case 0x3:  // 3XNN
+      if (V[X] == NN) {
+        PC += 2;
+      }
       break;
-    case 0x4:
-      instr4XNN(X, NN);
+    case 0x4:  // 4XNN
+      if (V[X] != NN) {
+        PC += 2;
+      }
       break;
-    case 0x5:
-      instr5XY0(X, Y);
+    case 0x5:  // 5XY0
+      if (V[X] == V[Y]) {
+        PC += 2;
+      }
       break;
-    case 0x6:
-      instr6XNN(X, NN);
+    case 0x6:  // 6XNN
+      V[X] = NN;
       break;
-    case 0x7:
-      instr7XNN(X, NN);
+    case 0x7:  // 7XNN
+      V[X] += NN;
       break;
     case 0x8:
-      instr8XYN(X, Y, N);
+      switch (N) {
+        case 0x0:
+          V[X] = V[Y];
+          break;
+        case 0x1:
+          V[X] = V[X] | V[Y];
+          break;
+        case 0x2:
+          V[X] = V[X] & V[Y];
+          break;
+        case 0x3:
+          V[X] = V[X] ^ V[Y];
+          break;
+        case 0x4:
+          V[0xF] = (V[X] + V[Y]) > 255;
+          V[X] += V[Y];
+          break;
+        case 0x5:
+          V[0xF] = V[X] >= V[Y];
+          V[X] -= V[Y];
+          break;
+        case 0x6:
+          if (USE_COSMAC_VIP_SHIFT) {
+            V[X] = V[Y];
+          }
+          V[0xF] = V[X] & 0x1;
+          V[X] >>= 1;
+          break;
+        case 0x7:
+          V[0xF] = V[Y] >= V[X];
+          V[X] = V[Y] - V[X];
+          break;
+        case 0xE:
+          if (USE_COSMAC_VIP_SHIFT) {
+            V[X] = V[Y];
+          }
+          V[0xF] = (V[X] >> 7) & 0x1;
+          V[X] <<= 1;
+          break;
+        default:
+          break;
+      }
       break;
-    case 0x9:
-      instr9XY0(X, Y);
+    case 0x9:  // 9XY0
+      if (V[X] != V[Y]) {
+        PC += 2;
+      }
       break;
-    case 0xA:
-      instrANNN(NNN);
+    case 0xA:  // ANNN
+      I = NNN;
       break;
-    case 0xB:
-      instrBNNN(NNN);
+    case 0xB:  // BNNN
+      if (USE_COSMAC_VIP_SHIFT) {
+        PC = NNN + V[0x0];
+      } else {
+        uint8_t X = (NNN >> 8) & 0x0F;
+        PC = NNN + V[X];
+      }
       break;
-    case 0xC:
-      instrCXNN(X, NN);
+    case 0xC:  // CXNN
+      static std::random_device rd;
+      static std::mt19937 gen(rd());
+      static std::uniform_int_distribution<uint16_t> distr(0, 255);
+      uint8_t random_byte = static_cast<uint8_t>(distr(gen));
+      V[X] = random_byte & NN;
       break;
     case 0xD:
       instrDXYN(V[X], V[Y], N);

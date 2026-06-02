@@ -29,39 +29,6 @@ class chip8 {
   // Set to false for CHIP-48 and SUPER-CHIP
   bool USE_COSMAC_VIP_SHIFT = true;
 
-  void instr00E0();  // Clear screen
-
-  void instr00EE();  // Popping the stack after 2NNN
-
-  void instr1NNN(uint16_t NNN);  // Jump
-
-  // Pushes the current PC to the stack
-  // and sets PC to NNN
-  void instr2NNN(uint16_t NNN);
-
-  void instr3XNN(uint8_t X, uint8_t NN);
-
-  void instr4XNN(uint8_t X, uint8_t NN);
-
-  void instr5XY0(uint8_t X, uint8_t Y);
-
-  void instr6XNN(uint8_t X, uint8_t NN);  // Set register VX
-
-  void instr7XNN(uint8_t X, uint8_t NN);  // Add value to register VX
-
-  // There is no actual 8XYN instruction in CHIP-8
-  // However, I wanted to organize code without having multiple 8XY..
-  // instructions
-  void instr8XYN(uint8_t X, uint8_t Y, uint8_t N);
-
-  void instr9XY0(uint8_t X, uint8_t Y);
-
-  void instrANNN(uint16_t NNN);  // Set index register I
-
-  void instrBNNN(uint16_t NNN);
-
-  void instrCXNN(uint8_t X, uint8_t NN);
-
   void instrDXYN(uint8_t x_coord, uint8_t y_coord, uint8_t N);  // Display/Draw
 
  public:

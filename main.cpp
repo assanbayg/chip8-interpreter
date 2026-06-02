@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
       }
     }
 
-    // Update: ~12 instructions per frame at 60fps ≈ 700hz
+    // ~12 instructions per frame at 60fps ≈ 700hz
     for (int i = 0; i < 12; i++) {
       uint16_t opcode = cpu.fetch();
       cpu.decode(opcode);
