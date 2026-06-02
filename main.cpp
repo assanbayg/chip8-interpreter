@@ -1,12 +1,20 @@
 #include <SDL2/SDL.h>
 
 #include <iostream>
+#include <unordered_map>
 
 #include "chip8.h"
 
 const int SCALE = 10;
 const int WIDTH = 64 * SCALE;
 const int HEIGHT = 32 * SCALE;
+
+const std::unordered_map<SDL_Keycode, uint8_t> keymap = {
+    {SDLK_1, 0x1}, {SDLK_2, 0x2}, {SDLK_3, 0x3}, {SDLK_4, 0xC},
+    {SDLK_q, 0x4}, {SDLK_w, 0x5}, {SDLK_e, 0x6}, {SDLK_r, 0xD},
+    {SDLK_a, 0x7}, {SDLK_s, 0x8}, {SDLK_d, 0x9}, {SDLK_f, 0xE},
+    {SDLK_z, 0xA}, {SDLK_x, 0x0}, {SDLK_c, 0xB}, {SDLK_v, 0xF},
+};
 
 int main(int argc, char* argv[]) {
   if (argc < 2) {
@@ -36,6 +44,12 @@ int main(int argc, char* argv[]) {
     // Input
     while (SDL_PollEvent(&event)) {
       if (event.type == SDL_QUIT) running = false;
+      if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
+        auto it = keymap.find(event.key.keysym.sym);
+        if (it != keymap.end()) {
+          cpu.key[it->second] = (event.type == SDL_KEYDOWN) ? 1 : 0;
+        }
+      }
     }
 
     // Update: ~12 instructions per frame at 60fps ≈ 700hz

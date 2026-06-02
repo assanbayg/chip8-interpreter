@@ -58,17 +58,21 @@ class chip8 {
 
   void instrANNN(uint16_t NNN);  // Set index register I
 
-  void DXYN(uint8_t x_coord, uint8_t y_coord, uint8_t N);  // Display/Draw
+  void instrBNNN(uint16_t NNN);
+
+  void instrCXNN(uint8_t X, uint8_t NN);
+
+  void instrDXYN(uint8_t x_coord, uint8_t y_coord, uint8_t N);  // Display/Draw
 
  public:
-  chip8() noexcept;
-
   uint8_t ram[MEMORY_SIZE];
+  uint8_t key[16];
   std::array<std::array<bool, WIDTH>, HEIGHT> display;
 
   uint16_t fetch();
   void decode(uint16_t opcode);
 
+  chip8() noexcept;
   ~chip8();
 };
 

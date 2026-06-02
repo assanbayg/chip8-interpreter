@@ -1,6 +1,7 @@
 #include "chip8.h"
 
 #include <cstring>
+#include <random>
 
 static constexpr uint8_t font[80] = {
     0xF0, 0x90, 0x90, 0x90, 0xF0,  // 0
@@ -33,9 +34,6 @@ void chip8::instr2NNN(uint16_t NNN) {
   }
 
   stack[sp++] = PC;
-  if (sp == 0) {
-    return;
-  }
   PC = NNN;
 }
 
@@ -67,20 +65,20 @@ void chip8::instr8XYN(uint8_t X, uint8_t Y, uint8_t N) {
       V[X] = V[Y];
       break;
     case 0x1:
-      V[X] = V[X] || V[Y];
+      V[X] = V[X] | V[Y];
       break;
     case 0x2:
-      V[X] = V[X] && V[Y];
+      V[X] = V[X] & V[Y];
       break;
     case 0x3:
       V[X] = V[X] ^ V[Y];
       break;
     case 0x4:
+      V[0xF] = (V[X] + V[Y]) > 255;
       V[X] += V[Y];
-      V[0xF] = V[X] > 255;
       break;
     case 0x5:
-      V[0xF] = V[Y] >= V[X];
+      V[0xF] = V[X] >= V[Y];
       V[X] -= V[Y];
       break;
     case 0x6:
@@ -91,7 +89,7 @@ void chip8::instr8XYN(uint8_t X, uint8_t Y, uint8_t N) {
       V[X] >>= 1;
       break;
     case 0x7:
-      V[0xF] = V[X] >= V[Y];
+      V[0xF] = V[Y] >= V[X];
       V[X] = V[Y] - V[X];
       break;
     case 0xE:
@@ -114,7 +112,24 @@ void chip8::instr9XY0(uint8_t X, uint8_t Y) {
 
 void chip8::instrANNN(uint16_t NNN) { I = NNN; }
 
-void chip8::DXYN(uint8_t x_coord, uint8_t y_coord, uint8_t N) {
+void chip8::instrBNNN(uint16_t NNN) {
+  if (USE_COSMAC_VIP_SHIFT) {
+    PC = NNN + V[0x0];
+  } else {
+    uint8_t X = (NNN >> 8) & 0x0F;
+    PC = NNN + V[X];
+  }
+}
+
+void chip8::instrCXNN(uint8_t X, uint8_t NN) {
+  static std::random_device rd;
+  static std::mt19937 gen(rd());
+  static std::uniform_int_distribution<uint16_t> distr(0, 255);
+  uint8_t random_byte = static_cast<uint8_t>(distr(gen));
+  V[X] = random_byte & NN;
+}
+
+void chip8::instrDXYN(uint8_t x_coord, uint8_t y_coord, uint8_t N) {
   x_coord %= 64;
   y_coord %= 32;
   V[0xF] = 0;
@@ -149,7 +164,8 @@ chip8::chip8() noexcept
       sp(0),
       delayTimer(0),
       soundTimer(0),
-      display{} {
+      display{},
+      key{} {
   // 0x050 is convenient start address for font data
   memcpy(ram + 0x050, font, sizeof(font));
 }
@@ -213,15 +229,73 @@ void chip8::decode(uint16_t opcode) {
       instrANNN(NNN);
       break;
     case 0xB:
+      instrBNNN(NNN);
       break;
     case 0xC:
+      instrCXNN(X, NN);
       break;
     case 0xD:
-      DXYN(V[X], V[Y], N);
+      instrDXYN(V[X], V[Y], N);
       break;
     case 0xE:
+      if (NN == 0x9E) {
+        if (key[V[X]]) {  // 0xEX9E
+          PC += 2;
+        }
+      } else if (NN == 0xA1) {
+        if (!key[V[X]]) {  // 0xEX21
+          PC += 2;
+        }
+      }
       break;
     case 0xF:
+      switch (NN) {
+        case 0x07:  // FX07
+          V[X] = delayTimer;
+          break;
+        case 0x15:  // FX15
+          delayTimer = V[X];
+          break;
+        case 0x18:  // FX18
+          soundTimer = V[X];
+          break;
+        case 0x1E:  // FX1E
+          I += V[X];
+          break;
+        case 0x0A:  // FX0A
+          for (uint8_t i = 0; i < 16; ++i) {
+            if (key[i]) {
+              V[X] = i;
+              return;
+            }
+          }
+          PC -= 2;
+          break;
+        case 0x29:  // FX29
+          I = 0x050 + (V[X] * 5);
+          break;
+        case 0x33:  // FX33
+        {
+          uint8_t n = V[X];
+          ram[I] = n / 100;
+          ram[I + 1] = n % 100 / 10;
+          ram[I + 2] = n % 10;
+
+          break;
+        }
+        case 0x55:  // FX55
+          for (uint8_t i = 0; i <= X; ++i) {
+            ram[I + i] = V[i];
+          }
+          break;
+        case 0x65:  // FX65
+          for (uint8_t i = 0; i < X; ++i) {
+            V[I + i] = ram[i];
+          }
+          break;
+        default:
+          break;
+      }
       break;
     default:
       break;
