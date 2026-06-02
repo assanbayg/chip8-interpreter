@@ -25,6 +25,10 @@ class chip8 {
   uint8_t delayTimer;
   uint8_t soundTimer;
 
+  // Configuration for older games
+  // Set to false for CHIP-48 and SUPER-CHIP
+  bool USE_COSMAC_VIP_SHIFT = true;
+
   void instr00E0();  // Clear screen
 
   void instr00EE();  // Popping the stack after 2NNN
@@ -44,6 +48,11 @@ class chip8 {
   void instr6XNN(uint8_t X, uint8_t NN);  // Set register VX
 
   void instr7XNN(uint8_t X, uint8_t NN);  // Add value to register VX
+
+  // There is no actual 8XYN instruction in CHIP-8
+  // However, I wanted to organize code without having multiple 8XY..
+  // instructions
+  void instr8XYN(uint8_t X, uint8_t Y, uint8_t N);
 
   void instr9XY0(uint8_t X, uint8_t Y);
 

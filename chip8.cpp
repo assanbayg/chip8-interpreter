@@ -61,6 +61,51 @@ void chip8::instr6XNN(uint8_t X, uint8_t NN) { V[X] = NN; }
 
 void chip8::instr7XNN(uint8_t X, uint8_t NN) { V[X] += NN; }
 
+void chip8::instr8XYN(uint8_t X, uint8_t Y, uint8_t N) {
+  switch (N) {
+    case 0x0:
+      V[X] = V[Y];
+      break;
+    case 0x1:
+      V[X] = V[X] || V[Y];
+      break;
+    case 0x2:
+      V[X] = V[X] && V[Y];
+      break;
+    case 0x3:
+      V[X] = V[X] ^ V[Y];
+      break;
+    case 0x4:
+      V[X] += V[Y];
+      V[0xF] = V[X] > 255;
+      break;
+    case 0x5:
+      V[0xF] = V[Y] >= V[X];
+      V[X] -= V[Y];
+      break;
+    case 0x6:
+      if (USE_COSMAC_VIP_SHIFT) {
+        V[X] = V[Y];
+      }
+      V[0xF] = V[X] & 0x1;
+      V[X] >>= 1;
+      break;
+    case 0x7:
+      V[0xF] = V[X] >= V[Y];
+      V[X] = V[Y] - V[X];
+      break;
+    case 0xE:
+      if (USE_COSMAC_VIP_SHIFT) {
+        V[X] = V[Y];
+      }
+      V[0xF] = (V[X] >> 7) & 0x1;
+      V[X] <<= 1;
+      break;
+    default:
+      break;
+  }
+}
+
 void chip8::instr9XY0(uint8_t X, uint8_t Y) {
   if (V[X] != V[Y]) {
     PC += 2;
@@ -144,10 +189,13 @@ void chip8::decode(uint16_t opcode) {
       instr2NNN(NNN);
       break;
     case 0x3:
+      instr3XNN(X, NN);
       break;
     case 0x4:
+      instr4XNN(X, NN);
       break;
     case 0x5:
+      instr5XY0(X, Y);
       break;
     case 0x6:
       instr6XNN(X, NN);
@@ -156,8 +204,10 @@ void chip8::decode(uint16_t opcode) {
       instr7XNN(X, NN);
       break;
     case 0x8:
+      instr8XYN(X, Y, N);
       break;
     case 0x9:
+      instr9XY0(X, Y);
       break;
     case 0xA:
       instrANNN(NNN);
