@@ -20,24 +20,32 @@ class chip8 {
   uint16_t PC;  // Program counter
 
   uint16_t stack[16];  // Stack
-  uint8_t SP;          // Stack pointer
+  uint8_t sp;          // Stack pointer
 
   uint8_t delayTimer;
   uint8_t soundTimer;
 
   void instr00E0();  // Clear screen
 
+  void instr00EE();  // Popping the stack after 2NNN
+
   void instr1NNN(uint16_t NNN);  // Jump
 
   // Pushes the current PC to the stack
   // and sets PC to NNN
-  void instr2NNN();
+  void instr2NNN(uint16_t NNN);
 
-  void instr00EE();  // Popping the stack after 2NNN
+  void instr3XNN(uint8_t X, uint8_t NN);
+
+  void instr4XNN(uint8_t X, uint8_t NN);
+
+  void instr5XY0(uint8_t X, uint8_t Y);
 
   void instr6XNN(uint8_t X, uint8_t NN);  // Set register VX
 
   void instr7XNN(uint8_t X, uint8_t NN);  // Add value to register VX
+
+  void instr9XY0(uint8_t X, uint8_t Y);
 
   void instrANNN(uint16_t NNN);  // Set index register I
 

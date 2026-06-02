@@ -23,15 +23,49 @@ static constexpr uint8_t font[80] = {
 
 void chip8::instr00E0() { std::memset(&display, 0, sizeof(display)); }
 
+void chip8::instr00EE() { PC = stack[--sp]; }
+
 void chip8::instr1NNN(uint16_t NNN) { PC = NNN; }
 
-void chip8::instr2NNN() {}
+void chip8::instr2NNN(uint16_t NNN) {
+  if (sp >= 16) {
+    return;
+  }
 
-void chip8::instr00EE() {}
+  stack[sp++] = PC;
+  if (sp == 0) {
+    return;
+  }
+  PC = NNN;
+}
+
+void chip8::instr3XNN(uint8_t X, uint8_t NN) {
+  if (V[X] == NN) {
+    PC += 2;
+  }
+}
+
+void chip8::instr4XNN(uint8_t X, uint8_t NN) {
+  if (V[X] != NN) {
+    PC += 2;
+  }
+}
+
+void chip8::instr5XY0(uint8_t X, uint8_t Y) {
+  if (V[X] == V[Y]) {
+    PC += 2;
+  }
+}
 
 void chip8::instr6XNN(uint8_t X, uint8_t NN) { V[X] = NN; }
 
 void chip8::instr7XNN(uint8_t X, uint8_t NN) { V[X] += NN; }
+
+void chip8::instr9XY0(uint8_t X, uint8_t Y) {
+  if (V[X] != V[Y]) {
+    PC += 2;
+  }
+}
 
 void chip8::instrANNN(uint16_t NNN) { I = NNN; }
 
@@ -67,7 +101,7 @@ chip8::chip8() noexcept
       V{},
       stack{},
       I(0),
-      SP(0),
+      sp(0),
       delayTimer(0),
       soundTimer(0),
       display{} {
@@ -97,12 +131,17 @@ void chip8::decode(uint16_t opcode) {
   // I know this is ugly...
   switch (D) {
     case 0x0:
-      if (opcode == 0x00E0) instr00E0();
+      if (opcode == 0x00E0)
+        instr00E0();
+      else {
+        instr00EE();
+      }
       break;
     case 0x1:
       instr1NNN(NNN);
       break;
     case 0x2:
+      instr2NNN(NNN);
       break;
     case 0x3:
       break;
